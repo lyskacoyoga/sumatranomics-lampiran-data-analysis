@@ -1,0 +1,56 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# --- Lampiran: Kode Python untuk Grafik Disparitas Harga Pangan ---
+# Kode ini memvisualisasikan rata-rata selisih harga (gap margin) antara
+# harga ritel dan harga petani untuk komoditas utama di setiap provinsi.
+# Ini adalah analisis kunci untuk mengukur efisiensi rantai pasok.
+
+# Baca data yang sudah diperbaiki
+df = pd.read_csv('Data Fiks.xlsx - DATA FIKS.csv')
+
+# --- Data Preparation and Calculation ---
+price_columns_retail = ['Harga Beras (Rp/Kg) (Harga Ritel)', 'Harga Cabai (Rp/Kg) (Harga Ritel)', 'Harga Bawang (Rp/Kg) (Harga Ritel)']
+price_columns_petani = ['Harga Beras (Rp/Kg) (Harga Petani)', 'Harga Cabai (Rp/Kg) (Harga Petani)', 'Harga Bawang (Rp/Kg) (Harga Petani)']
+
+avg_retail_prices = df.groupby('Provinsi')[price_columns_retail].mean().reset_index()
+avg_petani_prices = df.groupby('Provinsi')[price_columns_petani].mean().reset_index()
+
+avg_retail_prices.columns = ['Provinsi', 'Beras_Ritel', 'Cabai_Ritel', 'Bawang_Ritel']
+avg_petani_prices.columns = ['Provinsi', 'Beras_Petani', 'Cabai_Petani', 'Bawang_Petani']
+
+price_disparity_df = pd.merge(avg_retail_prices, avg_petani_prices, on='Provinsi')
+
+melted_df = price_disparity_df.melt(id_vars='Provinsi', var_name='Jenis_Harga', value_name='Harga_Rata_Rata')
+
+melted_df[['Komoditas', 'Tipe']] = melted_df['Jenis_Harga'].str.split('_', expand=True)
+
+# --- Data Visualization ---
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(20, 10))
+
+ax = sns.barplot(x='Provinsi', y='Harga_Rata_Rata', hue='Jenis_Harga', data=melted_df, palette='muted')
+
+plt.title('Rata-rata Disparitas Harga Pangan per Komoditas dan Provinsi (2010-2025)', fontsize=16)
+plt.xlabel('Provinsi', fontsize=12)
+plt.ylabel('Harga Rata-rata (Rp/Kg)', fontsize=12)
+plt.xticks(rotation=45, ha='right')
+
+handles, labels = ax.get_legend_handles_labels()
+labels = [
+    'Beras (Ritel)', 'Cabai (Ritel)', 'Bawang (Ritel)',
+    'Beras (Petani)', 'Cabai (Petani)', 'Bawang (Petani)'
+]
+ax.legend(handles, labels, title='Harga', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():,.0f}', (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center', fontsize=9, color='black', xytext=(0, 5),
+                textcoords='offset points')
+
+plt.tight_layout()
+plt.savefig('disparitas_harga_sumatera.png')
+
+# Catatan: Kode ini adalah versi untuk lampiran, jadi tidak ada output grafik yang ditampilkan.
+print("Kode Python untuk Grafik Disparitas Harga Pangan sudah siap.")
