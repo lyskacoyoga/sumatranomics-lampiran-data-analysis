@@ -1,0 +1,82 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+#Baca data
+file_path = "Data Fiks.xlsx"   # ganti dengan lokasi file Anda
+df = pd.read_excel(file_path, sheet_name="DATA FIKS")
+
+#Ambil kolom harga beras ritel rata-rata per tahun
+df_beras = df.groupby("Tahun")["Harga Beras (Rp/Kg) (Harga Ritel)"].mean().reset_index()
+
+#Split data train & test
+train = df_beras[df_beras["Tahun"] <= 2022]["Harga Beras (Rp/Kg) (Harga Ritel)"]
+test  = df_beras[df_beras["Tahun"] > 2022]["Harga Beras (Rp/Kg) (Harga Ritel)"]
+
+#Fit ARIMA di data train
+model = ARIMA(train, order=(1,1,1))
+fit = model.fit()
+
+#Forecast sesuai panjang data test
+forecast = fit.forecast(steps=len(test))
+
+#Buat dataframe hasil aktual vs prediksi
+hasil = pd.DataFrame({
+    "Tahun": df_beras[df_beras["Tahun"] > 2022]["Tahun"].values,
+    "Aktual": test.values,
+    "Prediksi": forecast.values
+})
+
+#Hitung error per tahun
+hasil["Error"] = hasil["Aktual"] - hasil["Prediksi"]
+hasil["Error_Absolut"] = hasil["Error"].abs()
+hasil["Error_Persen"] = (hasil["Error_Absolut"] / hasil["Aktual"]) * 100
+
+#Tampilkan tabel hasil
+print("Error per Tahun (2023–2025):")
+print(hasil)
+
+#Hitung metrik diagnostik keseluruhan
+mae  = mean_absolute_error(test, forecast)
+rmse = np.sqrt(mean_squared_error(test, forecast))
+mape = np.mean(np.abs((test - forecast) / test)) * 100
+
+print("\nRingkasan Diagnostik Model:")
+print(f"MAE  : {mae:.2f} (Rp/kg)")
+print(f"RMSE : {rmse:.2f} (Rp/kg) - sensitif terhadap outlier (lonjakan/penurunan ekstrem)")
+print(f"MAPE : {mape:.2f}%")
+
+#Plot overlay aktual vs prediksi
+plt.figure(figsize=(8,5))
+plt.plot(hasil["Tahun"], hasil["Aktual"], marker="o", label="Aktual", linewidth=2)
+plt.plot(hasil["Tahun"], hasil["Prediksi"], marker="s", label="Prediksi (ARIMA)", linestyle="--")
+plt.title("Perbandingan Harga Beras Aktual vs Prediksi (2023–2025)")
+plt.xlabel("Tahun")
+plt.ylabel("Harga Beras (Rp/kg)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+#Plot bar chart error absolut per tahun
+plt.figure(figsize=(7,5))
+plt.bar(hasil["Tahun"], hasil["Error_Absolut"], color="tomato", alpha=0.7)
+for i, val in enumerate(hasil["Error_Absolut"]):
+    plt.text(hasil["Tahun"].iloc[i], val + 20, f"{val:.0f}", ha='center', fontsize=10)
+plt.title("Error Absolut Prediksi per Tahun (2023–2025)")
+plt.xlabel("Tahun")
+plt.ylabel("Error Absolut (Rp/kg)")
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+plt.show()
+
+#Plot bar chart error persen per tahun
+plt.figure(figsize=(7,5))
+plt.bar(hasil["Tahun"], hasil["Error_Persen"], color="royalblue", alpha=0.7)
+for i, val in enumerate(hasil["Error_Persen"]):
+    plt.text(hasil["Tahun"].iloc[i], val + 0.1, f"{val:.2f}%", ha='center', fontsize=10)
+plt.title("Error Persen Prediksi per Tahun (2023–2025)")
+plt.xlabel("Tahun")
+plt.ylabel("Error (%)")
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+plt.show()
