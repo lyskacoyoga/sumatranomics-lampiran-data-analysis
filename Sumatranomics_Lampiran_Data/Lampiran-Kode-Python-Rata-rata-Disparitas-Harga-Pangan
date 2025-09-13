@@ -2,10 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-Baca data dari file CSV
+#Baca data dari file CSV
 df = pd.read_excel('Data Fiks.xlsx')  # ganti nama file agar aman
 
-Kolom untuk analisis harga
+#Kolom untuk analisis harga
 price_columns_retail = [
     'Harga Beras (Rp/Kg) (Harga Ritel)',
     'Harga Cabai (Rp/Kg) (Harga Ritel)',
@@ -17,33 +17,33 @@ price_columns_petani = [
     'Harga Bawang (Rp/Kg) (Harga Petani)'
 ]
 
-Hitung rata-rata harga untuk setiap provinsi
+#Hitung rata-rata harga untuk setiap provinsi
 avg_retail_prices = df.groupby('Provinsi')[price_columns_retail].mean().reset_index()
 avg_petani_prices = df.groupby('Provinsi')[price_columns_petani].mean().reset_index()
 
-Ganti nama kolom agar lebih ringkas
+#Ganti nama kolom agar lebih ringkas
 avg_retail_prices.columns = ['Provinsi', 'Beras_Ritel', 'Cabai_Ritel', 'Bawang_Ritel']
 avg_petani_prices.columns = ['Provinsi', 'Beras_Petani', 'Cabai_Petani', 'Bawang_Petani']
 
-Gabungkan data
+#Gabungkan data
 price_disparity_df = pd.merge(avg_retail_prices, avg_petani_prices, on='Provinsi')
 
-Ubah format ke long format
+#Ubah format ke long format
 melted_df = price_disparity_df.melt(
     id_vars='Provinsi',
     var_name='Jenis_Harga',
     value_name='Harga_Rata_Rata'
 )
 
-Pisahkan komoditas dan tipe harga dengan mapping
+#Pisahkan komoditas dan tipe harga dengan mapping
 melted_df['Komoditas'] = melted_df['Jenis_Harga'].str.split('_').str[0]
 melted_df['Tipe'] = melted_df['Jenis_Harga'].str.split('_').str[1]
 
-Visualisasi Data
+#Visualisasi Data
 sns.set_theme(style="whitegrid")
 plt.figure(figsize=(20, 10))
 
-Barplot dengan komoditas + tipe
+#Barplot dengan komoditas + tipe
 ax = sns.barplot(
     x='Provinsi',
     y='Harga_Rata_Rata',
@@ -52,13 +52,13 @@ ax = sns.barplot(
     palette='muted'
 )
 
-Judul dan label
+#Judul dan label
 plt.title('Rata-rata Disparitas Harga Pangan per Komoditas dan Provinsi (2010-2025)', fontsize=16)
 plt.xlabel('Provinsi', fontsize=12)
 plt.ylabel('Harga Rata-rata (Rp/Kg)', fontsize=12)
 plt.xticks(rotation=45, ha='right')
 
-Sesuaikan legenda pakai mapping baru
+&Sesuaikan legenda pakai mapping baru
 handles, labels = ax.get_legend_handles_labels()
 new_labels = {
     'Beras_Ritel': 'Beras (Ritel)',
@@ -70,7 +70,7 @@ new_labels = {
 }
 ax.legend(handles, [new_labels[l] for l in labels], title='Harga', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-Tambahkan nilai di atas batang
+#Tambahkan nilai di atas batang
 for p in ax.patches:
     if not pd.isna(p.get_height()):
         ax.annotate(
@@ -84,6 +84,6 @@ for p in ax.patches:
 
 plt.tight_layout()
 
-Simpan grafik
+#Simpan grafik
 plt.savefig('disparitas_harga_sumatera.png', dpi=300)
 plt.show()
