@@ -1,0 +1,52 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#Baca data dari file CSV
+df = pd.read_excel('Data Fiks.xlsx')
+
+#Data Preparation and Calculation
+# Filter data untuk 3 tahun terakhir (2023-2025)
+df_filtered = df[df['Tahun'].isin([2023, 2024, 2025])]
+
+#Hitung rata-rata potensi hilirisasi dan kesiapan digitalisasi per provinsi
+df_avg = df_filtered.groupby('Provinsi').agg(
+    PDRB_Pengolahan_Makanan=('PDRB Pengolahan Makanan Miliar (Rp)', 'mean'),
+    Akses_Internet_Penduduk=('Akses Internet Penduduk (%)', 'mean')
+).reset_index()
+
+#Ganti nama kolom untuk kejelasan
+df_avg = df_avg.rename(columns={
+    'PDRB_Pengolahan_Makanan': 'Potensi Hilirisasi (Miliar Rp)',
+    'Akses_Internet_Penduduk': 'Kesiapan Digitalisasi (%)'
+})
+
+#Normalisasi data untuk perbandingan yang lebih baik
+df_avg['Potensi Hilirisasi (Miliar Rp) (Normalized)'] = df_avg['Potensi Hilirisasi (Miliar Rp)'] / df_avg['Potensi Hilirisasi (Miliar Rp)'].max() * 100
+df_avg['Kesiapan Digitalisasi (%) (Normalized)'] = df_avg['Kesiapan Digitalisasi (%)'] / df_avg['Kesiapan Digitalisasi (%)'].max() * 100
+
+#Ubah format DataFrame menjadi 'long format'
+df_melted = df_avg.melt(id_vars='Provinsi', value_vars=['Potensi Hilirisasi (Miliar Rp) (Normalized)', 'Kesiapan Digitalisasi (%) (Normalized)'],
+                        var_name='Indikator', value_name='Nilai_Ternormalisasi')
+
+#Visualisasi Data
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(15, 8))
+ax = sns.barplot(x='Provinsi', y='Nilai_Ternormalisasi', hue='Indikator', data=df_melted, palette='Paired')
+
+#Tambahkan judul dan label
+plt.title('Perbandingan Potensi Hilirisasi dan Kesiapan Digitalisasi per Provinsi (Rata-rata 2023-2025)', fontsize=16)
+plt.xlabel('Provinsi', fontsize=12)
+plt.ylabel('Nilai Ternormalisasi (%)', fontsize=12)
+plt.xticks(rotation=45, ha='right')
+
+#Sesuaikan legenda
+plt.legend(title='Indikator', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+#Tambahkan nilai di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.1f}%', (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center', fontsize=10, color='black', xytext=(0, 5),
+                textcoords='offset points')
+
+plt.tight_layout()
