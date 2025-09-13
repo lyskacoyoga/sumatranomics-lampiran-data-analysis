@@ -2,20 +2,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# --- Lampiran: Kode Python untuk Grafik Dampak Iklim pada Produksi ---
-# Kode ini berfungsi untuk mengukur dan memvisualisasikan dampak perubahan curah
-# hujan terhadap produksi padi dengan menghitung koefisien korelasi Pearson.
-# Ini adalah analisis kuantitatif untuk memahami hubungan iklim-produksi.
+Catatan: Pastikan file 'Data Fiks.xlsx - DATA FIKS.csv'
+sudah diunggah ke dalam sesi Google Colab Anda.
 
-# Baca data yang sudah diperbaiki
+Baca data dari file CSV
 df = pd.read_csv('Data Fiks.xlsx - DATA FIKS.csv')
 
-# --- Data Preparation and Calculation ---
+Hitung koefisien korelasi antara produksi padi dan total curah hujan
 correlation = df.groupby('Provinsi').apply(lambda x: x['Produksi Padi (Ton)'].corr(x['Total Curah Hujan (mm)']))
 correlation = correlation.to_frame(name='Koefisien_Korelasi').reset_index()
 correlation = correlation.sort_values(by='Koefisien_Korelasi', ascending=False)
 
-# --- Presentation ---
+Tampilkan tabel hasil
+print("Tabel Koefisien Korelasi antara Produksi Padi dan Total Curah Hujan:\n")
+print(correlation.to_string())
+
+Buat grafik batang untuk memvisualisasikan koefisien korelasi
 sns.set_theme(style="whitegrid")
 plt.figure(figsize=(10, 7))
 sns.barplot(x='Provinsi', y='Koefisien_Korelasi', data=correlation, palette='coolwarm')
@@ -29,7 +31,6 @@ for index, row in correlation.iterrows():
     plt.text(correlation.index.get_loc(index), row['Koefisien_Korelasi'], f"{row['Koefisien_Korelasi']:.2f}", ha='center', va='bottom', fontsize=12)
 
 plt.tight_layout()
-plt.savefig('korelasi_produksi_curah_hujan.png')
 
-# Catatan: Kode ini adalah versi untuk lampiran, jadi tidak ada output grafik yang ditampilkan.
-print("Kode Python untuk Grafik Dampak Iklim pada Produksi sudah siap.")
+Perintah untuk menyimpan grafik, yang akan berfungsi di Colab
+plt.savefig('korelasi_produksi_curah_hujan.png')
