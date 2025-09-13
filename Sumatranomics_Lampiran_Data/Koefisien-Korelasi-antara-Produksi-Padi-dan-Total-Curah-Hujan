@@ -2,35 +2,52 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-Catatan: Pastikan file 'Data Fiks.xlsx - DATA FIKS.csv'
-sudah diunggah ke dalam sesi Google Colab Anda.
+# Catatan: Pastikan file 'Data_Fiks.csv' sudah diunggah ke dalam sesi Google Colab Anda.
 
-Baca data dari file CSV
-df = pd.read_csv('Data Fiks.xlsx - DATA FIKS.csv')
+# Baca data dari file CSV
+df = pd.read_excel('Data Fiks.xlsx')
 
-Hitung koefisien korelasi antara produksi padi dan total curah hujan
-correlation = df.groupby('Provinsi').apply(lambda x: x['Produksi Padi (Ton)'].corr(x['Total Curah Hujan (mm)']))
+# Hitung koefisien korelasi antara Produksi Padi dan Total Curah Hujan per provinsi
+correlation = df.groupby('Provinsi').apply(
+    lambda x: x['Produksi Padi (Ton)'].corr(x['Total Curah Hujan (mm)'])
+)
 correlation = correlation.to_frame(name='Koefisien_Korelasi').reset_index()
 correlation = correlation.sort_values(by='Koefisien_Korelasi', ascending=False)
 
-Tampilkan tabel hasil
+# Tampilkan tabel hasil
 print("Tabel Koefisien Korelasi antara Produksi Padi dan Total Curah Hujan:\n")
-print(correlation.to_string())
+print(correlation.to_string(index=False))
 
-Buat grafik batang untuk memvisualisasikan koefisien korelasi
+# --- Visualisasi ---
 sns.set_theme(style="whitegrid")
-plt.figure(figsize=(10, 7))
-sns.barplot(x='Provinsi', y='Koefisien_Korelasi', data=correlation, palette='coolwarm')
+plt.figure(figsize=(12, 7))
+
+ax = sns.barplot(
+    x='Provinsi',
+    y='Koefisien_Korelasi',
+    data=correlation,
+    palette='coolwarm'
+)
 
 plt.title('Dampak Perubahan Curah Hujan terhadap Produksi Padi (Koefisien Korelasi)', fontsize=16)
 plt.xlabel('Provinsi', fontsize=12)
 plt.ylabel('Koefisien Korelasi', fontsize=12)
 plt.xticks(rotation=45, ha='right')
 
-for index, row in correlation.iterrows():
-    plt.text(correlation.index.get_loc(index), row['Koefisien_Korelasi'], f"{row['Koefisien_Korelasi']:.2f}", ha='center', va='bottom', fontsize=12)
+# Tambahkan label nilai di atas batang
+for p in ax.patches:
+    height = p.get_height()
+    if not pd.isna(height):  # hindari NaN
+        ax.annotate(
+            f'{height:.2f}',
+            (p.get_x() + p.get_width() / 2., height),
+            ha='center', va='bottom',
+            fontsize=10, color='black',
+            xytext=(0, 5), textcoords='offset points'
+        )
 
 plt.tight_layout()
 
-Perintah untuk menyimpan grafik, yang akan berfungsi di Colab
-plt.savefig('korelasi_produksi_curah_hujan.png')
+# Simpan grafik
+plt.savefig('korelasi_produksi_curah_hujan.png', dpi=300)
+plt.show()
