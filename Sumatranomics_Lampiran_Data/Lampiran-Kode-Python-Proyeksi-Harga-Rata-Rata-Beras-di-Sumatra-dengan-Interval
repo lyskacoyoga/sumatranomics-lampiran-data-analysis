@@ -1,0 +1,59 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from statsmodels.tsa.arima.model import ARIMA
+
+#Baca Data dari Excel
+file_path = "Data Fiks.xlsx"   # ganti dengan lokasi file Anda
+df = pd.read_excel(file_path, sheet_name="DATA FIKS")
+
+#Hitung rata-rata harga beras ritel seluruh provinsi per tahun
+avg_price = df.groupby("Tahun")["Harga Beras (Rp/Kg) (Harga Ritel)"].mean()
+
+# Ambil data tahun 2010–2025
+series = avg_price.loc[2010:2025]
+
+#Model ARIMA
+model = ARIMA(series, order=(1,1,1))  # bisa disesuaikan (p,d,q)
+fit = model.fit()
+
+#Forecast 5 tahun ke depan (2026–2030)
+forecast_res = fit.get_forecast(steps=5)
+mean_forecast = forecast_res.predicted_mean
+conf_int_95 = forecast_res.conf_int(alpha=0.05)  # 95% CI
+conf_int_80 = forecast_res.conf_int(alpha=0.20)  # 80% CI
+
+# Atur index menjadi tahun
+forecast_years = np.arange(2026, 2031)
+mean_forecast.index = forecast_years
+conf_int_95.index = forecast_years
+conf_int_80.index = forecast_years
+
+#Plot Hasil
+plt.figure(figsize=(12,7))
+
+# Data historis
+plt.plot(series.index, series.values, label="Harga Rata-Rata Aktual (2010–2025)", 
+         color="blue", marker="o")
+
+# Forecast
+plt.plot(forecast_years, mean_forecast.values, 'r--', 
+         label="Proyeksi Harga (2026–2030)")
+
+# Interval prediksi
+plt.fill_between(forecast_years, conf_int_95.iloc[:,0], conf_int_95.iloc[:,1], 
+                 color="pink", alpha=0.3, label="95% CI")
+plt.fill_between(forecast_years, conf_int_80.iloc[:,0], conf_int_80.iloc[:,1], 
+                 color="orange", alpha=0.3, label="80% CI")
+
+# Garis batas proyeksi
+plt.axvline(x=2025, color="grey", linestyle=":", label="Awal Proyeksi")
+
+# Tambahan elemen
+plt.title("Proyeksi Harga Rata-Rata Beras di Sumatra dengan Interval (2026–2030)")
+plt.xlabel("Tahun")
+plt.ylabel("Harga Rata-Rata Beras (Rp/Kg)")
+plt.legend()
+plt.grid(True)
+
+plt.show()
