@@ -1,0 +1,41 @@
+import pandas as pd
+
+#Baca data dari file CSV
+df = pd.read_excel('Data Fiks.xlsx')
+
+#Hitung persentase gap margin untuk beras
+df['Gap_Margin_Beras (%)'] = ((df['Harga Beras (Rp/Kg) (Harga Ritel)'] - df['Harga Beras (Rp/Kg) (Harga Petani)']) / df['Harga Beras (Rp/Kg) (Harga Petani)']) * 100
+
+#Kelompokkan berdasarkan provinsi dan hitung rata-rata untuk setiap indikator
+summary_table = df.groupby('Provinsi').agg(
+    Avg_Inflasi_Pangan_YoY=('Inflasi Makanan YoY (%)', 'mean'),
+    Avg_Produksi_Padi_Ton=('Produksi Padi (Ton)', 'mean'),
+    Avg_Gap_Margin_Beras=('Gap_Margin_Beras (%)', 'mean'),
+    Avg_PDRB_Pertanian_Miliar_Rp=('PDRB Pertanian Miliar (Rp)', 'mean'),
+    Avg_PDRB_Pengolahan_Makanan_Miliar_Rp=('PDRB Pengolahan Makanan Miliar (Rp)', 'mean'),
+    Avg_Akses_Internet_Penduduk_Persen=('Akses Internet Penduduk (%)', 'mean'),
+    Avg_Panjang_Jalan_Km=('Panjang Jalan Km', 'mean')
+).reset_index()
+
+#Ganti nama kolom untuk tampilan yang lebih jelas
+summary_table.columns = [
+    'Provinsi',
+    'Rata-rata Inflasi Pangan (%)',
+    'Rata-rata Produksi Padi (Ton)',
+    'Rata-rata Gap Margin Beras (%)',
+    'Rata-rata PDRB Pertanian (Miliar Rp)',
+    'Rata-rata PDRB Pengolahan Makanan (Miliar Rp)',
+    'Rata-rata Akses Internet (%)',
+    'Rata-rata Panjang Jalan (Km)'
+]
+
+#Bulatkan nilai numerik untuk keterbacaan yang lebih baik
+for col in summary_table.columns[1:]:
+    summary_table[col] = summary_table[col].round(2)
+
+#Atur 'Provinsi' sebagai indeks untuk format tabel yang lebih rapi
+summary_table = summary_table.set_index('Provinsi')
+
+#Tampilkan tabel
+print("Tabel Ringkasan Indikator Kunci per Provinsi (Rata-rata 2010-2025):")
+print(summary_table.to_string())
