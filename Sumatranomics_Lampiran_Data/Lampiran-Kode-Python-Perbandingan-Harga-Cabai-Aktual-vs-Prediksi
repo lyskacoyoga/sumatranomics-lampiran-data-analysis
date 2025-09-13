@@ -1,0 +1,38 @@
+df_cabai = df.groupby("Tahun")["Harga Cabai (Rp/Kg) (Harga Ritel)"].mean().reset_index()
+
+# Split data train & test
+train = df_cabai[df_cabai["Tahun"] <= 2022]["Harga Cabai (Rp/Kg) (Harga Ritel)"]
+test  = df_cabai[df_cabai["Tahun"] > 2022]["Harga Cabai (Rp/Kg) (Harga Ritel)"]
+
+# Fit ARIMA
+model = ARIMA(train, order=(1,1,1))
+fit = model.fit()
+
+# Forecast
+forecast = fit.forecast(steps=len(test))
+
+# Buat dataframe hasil aktual vs prediksi
+hasil = pd.DataFrame({
+    "Tahun": df_cabai[df_cabai["Tahun"] > 2022]["Tahun"].values,
+    "Aktual": test.values,
+    "Prediksi": forecast.values
+})
+
+# Hitung error per tahun
+hasil["Error"] = hasil["Aktual"] - hasil["Prediksi"]
+hasil["Error_Absolut"] = hasil["Error"].abs()
+hasil["Error_Persen"] = (hasil["Error_Absolut"] / hasil["Aktual"]) * 100
+
+# Plot overlay aktual vs prediksi
+plt.figure(figsize=(8,5))
+plt.plot(hasil["Tahun"], hasil["Aktual"], marker="o", label="Aktual", linewidth=2)
+plt.plot(hasil["Tahun"], hasil["Prediksi"], marker="s", label="Prediksi (ARIMA)", linestyle="--")
+plt.title("Perbandingan Harga Cabai Aktual vs Prediksi (2023–2025)")
+plt.xlabel("Tahun")
+plt.ylabel("Harga Cabai (Rp/kg)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+import caas_jupyter_tools
+caas_jupyter_tools.display_dataframe_to_user("Error per Tahun (2023–2025)", hasil)
