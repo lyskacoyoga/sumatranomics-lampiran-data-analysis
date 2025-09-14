@@ -1,29 +1,29 @@
 df_bawang = df.groupby("Tahun")["Harga Bawang (Rp/Kg) (Harga Ritel)"].mean().reset_index()
 
-# Split data train & test
+#Split data train & test
 train = df_bawang[df_bawang["Tahun"] <= 2022]["Harga Bawang (Rp/Kg) (Harga Ritel)"]
 test  = df_bawang[df_bawang["Tahun"] > 2022]["Harga Bawang (Rp/Kg) (Harga Ritel)"]
 
-# Fit ARIMA
+#Fit ARIMA
 model = ARIMA(train, order=(1,1,1))
 fit = model.fit()
 
-# Forecast
+#Forecast
 forecast = fit.forecast(steps=len(test))
 
-# Buat dataframe hasil aktual vs prediksi
+#Buat dataframe hasil aktual vs prediksi
 hasil = pd.DataFrame({
     "Tahun": df_bawang[df_bawang["Tahun"] > 2022]["Tahun"].values,
     "Aktual": test.values,
     "Prediksi": forecast.values
 })
 
-# Hitung error per tahun
+#Hitung error per tahun
 hasil["Error"] = hasil["Aktual"] - hasil["Prediksi"]
 hasil["Error_Absolut"] = hasil["Error"].abs()
 hasil["Error_Persen"] = (hasil["Error_Absolut"] / hasil["Aktual"]) * 100
 
-# Plot overlay aktual vs prediksi
+#Plot overlay aktual vs prediksi
 plt.figure(figsize=(8,5))
 plt.plot(hasil["Tahun"], hasil["Aktual"], marker="o", label="Aktual", linewidth=2)
 plt.plot(hasil["Tahun"], hasil["Prediksi"], marker="s", label="Prediksi (ARIMA)", linestyle="--")
