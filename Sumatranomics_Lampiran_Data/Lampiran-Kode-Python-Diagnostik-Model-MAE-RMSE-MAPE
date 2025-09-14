@@ -1,6 +1,6 @@
 import pandas as pd
 
-# Membuat DataFrame Tabel Diagnostik Model
+#Membuat DataFrame Tabel Diagnostik Model
 data = {
     "Metrik": ["MAE", "RMSE", "MAPE"],
     "Nilai": [589403.836, 697098.395, 3.047164],
@@ -13,10 +13,10 @@ data = {
 
 df_diagnostik = pd.DataFrame(data)
 
-# Menampilkan tabel
+#Menampilkan tabel
 print(df_diagnostik)
 
-# Jika ingin tampil lebih rapi di notebook (misalnya Jupyter/Colab)
+#Jika ingin tampil lebih rapi di notebook (misalnya Jupyter/Colab)
 import matplotlib.pyplot as plt
 import seaborn as sns
 
